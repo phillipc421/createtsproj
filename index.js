@@ -8,30 +8,34 @@ const EXIT_CODES = {
   SUCCESS: 0,
 };
 
+const TS_ENTRY = 'index.ts';
+
+const PKG_JSON = {
+  name: '',
+  version: '1.0.0',
+  description: '',
+  main: 'index.js',
+  scripts: {
+    test: 'echo "Error: no test specified" && exit 1',
+    dev: 'tsc && node dist/index.js',
+  },
+  keywords: [],
+  author: '',
+  license: 'ISC',
+};
+
+const TS_CONFIG = {
+  extends: '@tsconfig/recommended/tsconfig.json',
+  compilerOptions: {
+    outDir: './dist',
+  },
+  include: ['src/**/*'],
+  exclude: ['node_modules', 'dist'],
+};
+
 const run = async () => {
-  const PKG_JSON = {
-    name: '',
-    version: '1.0.0',
-    description: '',
-    main: 'index.js',
-    scripts: {
-      test: 'echo "Error: no test specified" && exit 1',
-      dev: 'tsc && node dist/index.js',
-    },
-    keywords: [],
-    author: '',
-    license: 'ISC',
-  };
-  const TS_CONFIG = {
-    extends: '@tsconfig/recommended/tsconfig.json',
-    compilerOptions: {
-      outDir: './dist',
-    },
-    include: ['src/**/*'],
-    exclude: ['node_modules', 'dist'],
-  };
   // get project name
-  const projectName = process.argv.slice(2)[0];
+  const [projectName] = process.argv.slice(2);
   if (!projectName) {
     console.log('Missing project name');
     return EXIT_CODES.ERROR;
@@ -43,9 +47,10 @@ const run = async () => {
   try {
     // create dir and src dir
     console.log('Creating directories...');
-    const BASE_DIR = path.join(os.homedir(), 'Development');
+    const BASE_DIR = path.normalize(process.cwd());
     const newPath = path.join(BASE_DIR, projectName, 'src');
     await fs.mkdir(newPath, { recursive: true });
+    // could be wrong now given we are using cwd rather than a hardcoded path
     const rootPath = newPath.split('/').slice(0, 5).join('/');
 
     // command
@@ -65,7 +70,7 @@ const run = async () => {
     )}' > tsconfig.json;`;
 
     // create index.ts
-    command += `cd ${newPath} && touch index.ts;`;
+    command += `cd ${newPath} && touch ${TS_ENTRY};`;
 
     console.log('Executing commands...');
     execSync(command);
